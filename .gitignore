@@ -11,3 +11,11 @@
 *.lai
 *.la
 *.a
+
+*.dblite
+*.idb
+*.pdb
+*.pyc
+bin
+build
+lib
