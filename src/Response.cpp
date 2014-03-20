@@ -23,49 +23,9 @@
 #include "http/Common.hpp"
 #include "http/Response.hpp"
 #include "http/Error.hpp"
+#include "http/Parse.hpp"
 
 namespace http {
-
-template <typename T>
-class ParseResult {
-public:
-    T value;
-    char const* ch;
-};
-
-template <typename F>
-static ParseResult<std::string> parseUntil(char const* str, F func) {
-    ParseResult<std::string> result{};
-    char const* ch = str;
-    for (; *ch && !func(*ch); ++ch) {}
-    result.value = std::string(str,ch-str);
-    result.ch = ch;
-    return result;
-}
-
-template <typename F>
-static ParseResult<std::string> parseWhile(char const* str, F func) {
-    ParseResult<std::string> result{};
-    char const* ch = str;
-    for (; *ch && func(*ch); ++ch) {}
-    result.value = std::string(str,ch-str);
-    result.ch = ch;
-    return result;
-}
-
-static ParseResult<std::string> parseToken(char const* str) {
-    auto token = parseUntil(str, isspace);
-    token.ch = parseWhile(token.ch, isspace).ch;
-    return token;
-}
-
-static ParseResult<std::string> parseCrLf(char const* str) {
-    auto cr = parseUntil(str, [](char ch) { return ch == '\r'; });
-	if (*cr.ch == '\r') {
-		cr.ch++;
-	}
-	return parseWhile(cr.ch, [](char ch) { return isspace(ch) && ch != '\r'; });
-}
 
 static ParseResult<Response::Status> parseStatus(char const* str) {
     ParseResult<Response::Status> result{};
@@ -96,6 +56,9 @@ Response parseResponse(char const* str) {
         auto ws = parseWhile(name.ch, isspace);
         auto value = parseUntil(ws.ch, [](char ch) { return ch == '\r'; });   
         response.headerIs(name.value, value.value);
+        if (name.value == "Set-Cookie") {
+            response.cookieIs(Cookie(value.value));
+        }
         ch = parseCrLf(value.ch).ch;
     }
     ch = parseCrLf(ch).ch;
@@ -113,6 +76,10 @@ std::string const Response::header(std::string const& name) const {
     return headers_.header(name);
 }
 
+Cookie const Response::cookie(std::string const& name) const {
+    return cookies_.cookie(name);
+}
+
 void Response::statusIs(Status status) {
     status_ = status;
 }
@@ -123,6 +90,10 @@ void Response::dataIs(std::string const& data) {
 
 void Response::headerIs(std::string const& name, std::string const& value) {
     headers_.headerIs(name, value);
+}
+
+void Response::cookieIs(Cookie const& cookie) {
+    cookies_.cookieIs(cookie);
 }
 
 }

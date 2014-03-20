@@ -24,6 +24,7 @@
 
 #include "http/Common.hpp"
 #include "http/Headers.hpp"
+#include "http/Cookies.hpp"
 
 namespace http {
 
@@ -78,16 +79,19 @@ public:
     Status status() const { return status_; }
     std::string const& data() const { return data_; }
     std::string const header(std::string const& name) const;
+    Cookie const cookie(std::string const& name) const;
 
     void statusIs(Status status);
     void versionIs(std::string const& version);
     void dataIs(std::string const& data);
     void headerIs(std::string const& name, std::string const& value);
+    void cookieIs(Cookie const& cookie);
 
 private:
     Status status_ = INVALID_CODE;
     std::string data_;
     Headers headers_;
+    Cookies cookies_;
 };
 
 

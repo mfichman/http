@@ -25,10 +25,8 @@
 
 namespace http {
 
-Response get(std::string const& path, std::string const& data) {
-    Request request;
-    request.uriIs(Uri(path));
-    request.dataIs(data);
+Response send(Request const& request) {
+    // Send an HTTP request.  Auto-fill the content-length headers.
     std::string const string = str(request); 
     
     uint16_t port = 0;
@@ -58,9 +56,23 @@ Response get(std::string const& path, std::string const& data) {
     return Response(ss.str());
 }
 
-//Response post(std::string const& path, std::string const& data) {
+Response get(std::string const& path, std::string const& data) {
+    // Shortcut for simple GET requests
+    Request request;
+    request.methodIs(Request::GET);
+    request.uriIs(Uri(path));
+    request.dataIs(data);
+    return send(request);
+}
 
-//}
+Response post(std::string const& path, std::string const& data) {
+    // Shortcut for simple POST requests
+    Request request;
+    request.methodIs(Request::POST);
+    request.uriIs(Uri(path));
+    request.dataIs(data);
+    return send(request);
+}
 
 std::string str(Request::Method method) {
     switch (method) {

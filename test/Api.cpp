@@ -21,22 +21,26 @@
  */
 
 #include "http/Common.hpp"
-#include "http/Headers.hpp"
+#include "http/http.hpp"
 
-namespace http {
+int main() {
 
-std::string const Headers::HOST("Host");
-std::string const Headers::CONTENT_LENGTH("Content-Length");
-std::string const Headers::ACCEPT_ENCODING("Accept-Encoding");
-std::string const Headers::CONNECTION("Connection");
+    auto coro = coro::start([]{
+        try {
+            //http::Response res = http::get("https://192.168.1.154/foob"); 
+            //
+            http::Response res = http::post("https://192.168.1.154/user/login", 
+                "{ \"UserId\": \"matt\", \"Password\": \"matt\"} ");
 
-std::string const Headers::header(std::string const& name) const {
-    auto i = header_.find(name);
-    return (i == header_.end()) ? "" : i->second;
-}
-
-void Headers::headerIs(std::string const& name, std::string const& value) {
-    header_.emplace(name, value);
-}
-
+            auto sessionId = res.cookie("SessionId");
+            std::cout << sessionId.value() << std::endl;
+            std::cout << sessionId.httpOnly() << std::endl;
+            std::cout << sessionId.secure() << std::endl;
+            std::cout << sessionId.path() << std::endl;
+        } catch (coro::SystemError const& ex) {
+            std::cerr << ex.what() << std::endl;
+        }
+    });
+    coro::run(); 
+    return 0;
 }

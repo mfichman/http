@@ -22,15 +22,9 @@
 
 #include "http/Common.hpp"
 #include "http/Uri.hpp"
+#include "http/Parse.hpp"
 
 namespace http {
-
-template <typename T>
-class ParseResult {
-public:
-    T value;
-    char const* ch;
-};
 
 static bool isReserved(char ch) {
     switch (ch) {
@@ -39,16 +33,6 @@ static bool isReserved(char ch) {
     case '?': return true;
     default: return false;
     }
-}
-
-template <typename F>
-static ParseResult<std::string> parseWhile(char const* str, F func) {
-    ParseResult<std::string> result{};
-    char const* ch = str;
-    for (; *ch && func(*ch); ++ch) {}
-    result.value = std::string(str,ch-str);
-    result.ch = ch;
-    return result;
 }
 
 static ParseResult<std::string> parseScheme(char const* str) {
