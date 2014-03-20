@@ -33,8 +33,8 @@ void Request::methodIs(Method method) {
     method_ = method;
 }
 
-void Request::pathIs(std::string const& path) {
-    path_ = path;
+void Request::uriIs(Uri const& uri) {
+    uri_ = uri;
 }
 
 void Request::dataIs(std::string const& data) {

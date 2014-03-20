@@ -22,8 +22,92 @@
 
 #include "http/Common.hpp"
 #include "http/Response.hpp"
+#include "http/Error.hpp"
 
 namespace http {
+
+template <typename T>
+class ParseResult {
+public:
+    T value;
+    char const* ch;
+};
+
+template <typename F>
+static ParseResult<std::string> parseUntil(char const* str, F func) {
+    ParseResult<std::string> result{};
+    char const* ch = str;
+    for (; *ch && !func(*ch); ++ch) {}
+    result.value = std::string(str,ch-str);
+    result.ch = ch;
+    return result;
+}
+
+template <typename F>
+static ParseResult<std::string> parseWhile(char const* str, F func) {
+    ParseResult<std::string> result{};
+    char const* ch = str;
+    for (; *ch && func(*ch); ++ch) {}
+    result.value = std::string(str,ch-str);
+    result.ch = ch;
+    return result;
+}
+
+static ParseResult<std::string> parseToken(char const* str) {
+    auto token = parseUntil(str, isspace);
+    token.ch = parseWhile(token.ch, isspace).ch;
+    return token;
+}
+
+static ParseResult<std::string> parseCrLf(char const* str) {
+    auto cr = parseUntil(str, [](char ch) { return ch == '\r'; });
+	if (*cr.ch == '\r') {
+		cr.ch++;
+	}
+	return parseWhile(cr.ch, [](char ch) { return isspace(ch) && ch != '\r'; });
+}
+
+static ParseResult<Response::Status> parseStatus(char const* str) {
+    ParseResult<Response::Status> result{};
+    auto code = parseToken(str);
+
+    result.value = (Response::Status)std::atoi(code.value.c_str());
+    result.ch = code.ch;
+    return result;
+}
+
+Response parseResponse(char const* str) {
+    // Parse an HTTP response 
+    auto version = parseToken(str);
+    auto code = parseStatus(version.ch);
+    auto message = parseUntil(code.ch, [](char ch) { return ch == '\r'; });
+    
+    auto response = Response();
+    if (version.value != "HTTP/1.1") {
+        throw Error("bad HTTP version");
+    }
+      
+    auto ch = parseCrLf(message.ch).ch;
+    while (*ch != '\0' && *ch != '\r') {
+        auto name = parseUntil(ch, [](char ch) { return ch == ':'; });
+        if (*name.ch) {
+            name.ch++; // For ":"
+        }
+        auto ws = parseWhile(name.ch, isspace);
+        auto value = parseUntil(ws.ch, [](char ch) { return ch == '\r'; });   
+        response.headerIs(name.value, value.value);
+        ch = parseCrLf(value.ch).ch;
+    }
+    ch = parseCrLf(ch).ch;
+    
+    response.statusIs(code.value);
+    response.dataIs(ch); 
+    return response;
+}
+
+Response::Response(std::string const& response) {
+     *this = parseResponse(response.c_str());
+}
 
 std::string const Response::header(std::string const& name) const {
     return headers_.header(name);
@@ -31,10 +115,6 @@ std::string const Response::header(std::string const& name) const {
 
 void Response::statusIs(Status status) {
     status_ = status;
-}
-
-void Response::versionIs(std::string const& version) {
-    version_ = version;
 }
 
 void Response::dataIs(std::string const& data) {

@@ -21,22 +21,21 @@
  */
 
 #include "http/Common.hpp"
-#include "http/Headers.hpp"
+#include "http/http.hpp"
 
-namespace http {
+int main() {
 
-std::string const Headers::HOST("Host");
-std::string const Headers::CONTENT_LENGTH("Content-Length");
-std::string const Headers::ACCEPT_ENCODING("Accept-Encoding");
-std::string const Headers::CONNECTION("Connection");
+    auto coro = coro::start([]{
+        try {
+            http::Response res1 = http::get("http://www.google.com"); 
+            assert(res1.status()==http::Response::OK);
+            http::Response res2 = http::get("https://www.google.com"); 
+            assert(res2.status()==http::Response::OK);
+        } catch (coro::SystemError const& ex) {
+            std::cerr << ex.what() << std::endl;
+        }
+    });
+    coro::run(); 
 
-std::string const Headers::header(std::string const& name) const {
-    auto i = header_.find(name);
-    return (i == header_.end()) ? "" : i->second;
-}
-
-void Headers::headerIs(std::string const& name, std::string const& value) {
-    header_[name] = value;
-}
-
+    return 0;
 }

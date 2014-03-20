@@ -25,15 +25,42 @@
 
 namespace http {
 
-/*
 Response get(std::string const& path, std::string const& data) {
+    Request request;
+    request.uriIs(Uri(path));
+    request.dataIs(data);
+    std::string const string = str(request); 
+    
+    uint16_t port = 0;
+    coro::Ptr<coro::Socket> sd;
+    if (request.uri().scheme() == "https") {
+        sd.reset(new coro::SslSocket);
+        port = 443;
+    } else if (request.uri().scheme() == "http") {
+        sd.reset(new coro::Socket);
+        port = 80;
+    } else {
+        assert(!"unknown http scheme");
+    }
+    if (request.uri().port()) {
+        port = request.uri().port();
+    }
+    sd->connect(coro::SocketAddr(request.uri().host(), port));
+    sd->writeAll(string.c_str(), string.size());
 
+    std::vector<char> buffer(16384); // 16 KiB
+    std::stringstream ss;
+    
+    while (size_t bytes = sd->read(&buffer[0], buffer.size())) {
+        ss.write(&buffer[0], bytes);
+    }
+
+    return Response(ss.str());
 }
 
-Response post(std::string const& path, std::string const& data) {
+//Response post(std::string const& path, std::string const& data) {
 
-}
-*/
+//}
 
 std::string str(Request::Method method) {
     switch (method) {
@@ -49,15 +76,21 @@ std::string str(Request::Method method) {
     return "";
 }
 
-/*
 std::string str(Request const& request) {
-    //std::stringstream ss;
-        
-
-    //ss << str(request.method() << ' ' << request.path() << " HTTP/1.1\n";
-    //ss << host
-    return "";
+    // Serialize a request to a string
+    std::stringstream ss;
+    auto path = request.path().empty() ? "/" : request.path();
+    ss << str(request.method()) << ' ' << path << " HTTP/1.1\n";
+    ss << Headers::HOST << ": " << request.uri().host() << "\n";
+    ss << Headers::CONTENT_LENGTH << ": " << request.data().size() << "\n";
+    ss << Headers::CONNECTION << ": close\n";
+    ss << Headers::ACCEPT_ENCODING << ": identity\n";
+    for(auto header : request.headers()) {
+        ss << header.first << ": " << header.second << "\n";
+    }
+    ss << "\n";
+    ss << request.data();
+    return ss.str();
 }
-*/
 
 }

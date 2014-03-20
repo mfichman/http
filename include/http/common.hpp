@@ -25,6 +25,7 @@
 
 #include <coro/coro.hpp>
 #include <map>
+#include <sstream>
 #undef DELETE // Windows...
 
 #endif

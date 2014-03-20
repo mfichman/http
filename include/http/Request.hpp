@@ -24,6 +24,7 @@
 
 #include "http/Common.hpp"
 #include "http/Headers.hpp"
+#include "http/Uri.hpp"
 
 namespace http {
 
@@ -32,18 +33,20 @@ public:
     enum Method { GET, HEAD, POST, PUT, DELETE, TRACE, CONNECT };
 
     Method method() const { return method_; }
-    std::string const& path() const { return path_; }
+    Uri const& uri() const { return uri_; }
+    std::string const& path() const { return uri_.path(); }
     std::string const& data() const { return data_; }
     std::string const header(std::string const& name) const;
+    Headers const& headers() const { return headers_; }
 
     void methodIs(Method method);
-    void pathIs(std::string const& path);
+    void uriIs(Uri const& path);
     void dataIs(std::string const& data);
     void headerIs(std::string const& name, std::string const& value);
 
 private:
-    Method method_;
-    std::string path_;
+    Method method_ = GET;
+    Uri uri_;
     std::string data_;
     Headers headers_;
 };

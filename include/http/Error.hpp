@@ -20,23 +20,20 @@
  * IN THE SOFTWARE.
  */
 
-#include "http/Common.hpp"
-#include "http/Headers.hpp"
+#pragma once
+
+#include "http\Common.hpp"
 
 namespace http {
 
-std::string const Headers::HOST("Host");
-std::string const Headers::CONTENT_LENGTH("Content-Length");
-std::string const Headers::ACCEPT_ENCODING("Accept-Encoding");
-std::string const Headers::CONNECTION("Connection");
+class Error {
+public:
+    Error(std::string const& what) : what_(what) {}
 
-std::string const Headers::header(std::string const& name) const {
-    auto i = header_.find(name);
-    return (i == header_.end()) ? "" : i->second;
-}
+    std::string const& what() const { return what_; }
+private:
+    std::string what_;
 
-void Headers::headerIs(std::string const& name, std::string const& value) {
-    header_[name] = value;
-}
+};
 
 }

@@ -42,7 +42,7 @@ static bool isReserved(char ch) {
 }
 
 template <typename F>
-static ParseResult<std::string> parseUntil(char const* str, F func) {
+static ParseResult<std::string> parseWhile(char const* str, F func) {
     ParseResult<std::string> result{};
     char const* ch = str;
     for (; *ch && func(*ch); ++ch) {}
@@ -52,7 +52,7 @@ static ParseResult<std::string> parseUntil(char const* str, F func) {
 }
 
 static ParseResult<std::string> parseScheme(char const* str) {
-    ParseResult<std::string> result = parseUntil(str, [](char ch) {
+    auto result = parseWhile(str, [](char ch) {
         return ch != ':' && !isReserved(ch);
     });
     result.ch = (result.ch[0] == ':') ? (result.ch+1) : (result.ch);
@@ -60,7 +60,7 @@ static ParseResult<std::string> parseScheme(char const* str) {
 }
 
 static ParseResult<std::string> parseUser(char const* str) {
-    ParseResult<std::string> result = parseUntil(str, [](char ch) {
+    auto result = parseWhile(str, [](char ch) {
         return ch != '@' && !isReserved(ch);
     });
     if (result.ch[0] == '@') {
@@ -73,10 +73,9 @@ static ParseResult<std::string> parseUser(char const* str) {
 }
 
 static ParseResult<std::string> parseHost(char const* str) {
-    ParseResult<std::string> result = parseUntil(str, [](char ch) {
+    return parseWhile(str, [](char ch) {
         return ch != ':' && !isReserved(ch);
     });
-    return result;
 }
 
 static ParseResult<uint16_t> parsePort(char const* str) {
@@ -86,7 +85,7 @@ static ParseResult<uint16_t> parsePort(char const* str) {
         result.ch = str;
         return result;
     }
-    ParseResult<std::string> tmp = parseUntil(str+1, [](char ch) {
+    auto tmp = parseWhile(str+1, [](char ch) {
         return !isReserved(ch);
     });
     result.value = uint16_t(strtol(tmp.value.c_str(), 0, 10));
@@ -115,11 +114,11 @@ static ParseResult<Authority> parseAuthority(char const* str) {
 
 static ParseResult<std::string> parsePath(char const* str) {
     // Return query/frag as part of path for now
-    ParseResult<std::string> result = parseUntil(str, [](char ch) {
+    ParseResult<std::string> result = parseWhile(str, [](char ch) {
         return true; 
     }); 
 /*
-    ParseResult<std::string> result = parseUntil(str, [](char ch) {
+    ParseResult<std::string> result = parseWhile(str, [](char ch) {
         return ch != '/' && !isReserved(ch);
     }); 
     result.ch = (result.ch[0] == '?') ? (result.ch+1) : (result.ch);

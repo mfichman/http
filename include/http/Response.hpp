@@ -72,8 +72,10 @@ public:
         VERSION_NOT_SUPPORTED = 505,
     };
 
+    Response(std::string const& text);
+    Response() {};
+
     Status status() const { return status_; }
-    std::string const& version() const { return version_; }
     std::string const& data() const { return data_; }
     std::string const header(std::string const& name) const;
 
@@ -83,8 +85,7 @@ public:
     void headerIs(std::string const& name, std::string const& value);
 
 private:
-    Status status_;
-    std::string version_;
+    Status status_ = INVALID_CODE;
     std::string data_;
     Headers headers_;
 };

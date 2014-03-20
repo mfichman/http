@@ -50,9 +50,11 @@ public:
     Uri(std::string const& value);
     Uri();
     
-    std::string const& scheme() { return scheme_; } 
-    Authority const& authority() { return authority_; }
-    std::string const& path() { return path_; }
+    std::string const& scheme() const { return scheme_; } 
+    Authority const& authority() const { return authority_; }
+    std::string const& path() const { return path_; }
+    std::string const& host() const { return authority_.host(); }
+    uint16_t port() const { return authority_.port(); }
 
     void schemeIs(std::string const& scheme);
     void authorityIs(Authority const& authority);
