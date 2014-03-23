@@ -90,7 +90,7 @@ class Package:
             return self.env['PLATFORM'] == lib.platforms
 
     def _setup_assets(self):
-        if len(self.assets) < 0:
+        if len(self.assets) <= 0:
             return
 
         fd = open('include/%s/Assets.hpp' % self.name, 'w')
