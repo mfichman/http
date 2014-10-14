@@ -1,4 +1,5 @@
 # Compiled Object files
+.gitattributes
 *.slo
 *.lo
 *.o
